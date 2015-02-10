@@ -66,11 +66,20 @@ Vagrant.configure("2") do |config|
       config.vm.hostname = vm_name
 
         # Install Docker
-      pkg_cmd = "wget http://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.5.0/lxc-docker-1.5.0_1.5.0_amd64.deb ;" \
+      docker_cmd = "wget http://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.5.0/lxc-docker-1.5.0_1.5.0_amd64.deb ;" \
         "dpkg -i lxc-docker-1.5.0_1.5.0_amd64.deb ;"
           # Add vagrant user to the docker group
-      pkg_cmd << "usermod -a -G docker vagrant; "
-      config.vm.provision :shell, :inline => pkg_cmd
+      docker_cmd << "usermod -a -G docker vagrant; "
+      config.vm.provision :shell, :inline => docker_cmd
+
+      # Install Docker
+      swarm_cmd = "wget https://github.com/docker/swarm/releases/download/v0.1.0-rc2/docker-swarm_linux-amd64 ;" \
+        "mv docker-swarm_linux-amd64 /bin/swarm ;"
+        # Add vagrant user to the docker group
+      swarm_cmd << "usermod -a -G docker vagrant; "
+      config.vm.provision :shell, :inline => swarm_cmd
+
+
 
 
       if $expose_docker_tcp
