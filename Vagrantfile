@@ -27,7 +27,7 @@ if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
 elsif ENV["DEIS_NUM_INSTANCES"].to_i > 0 && ENV["DEIS_NUM_INSTANCES"]
   $num_instances = ENV["DEIS_NUM_INSTANCES"].to_i
 else
-  $num_instances = 3
+  $num_instances = 4
 end
 
 if File.exist?(CONFIG)
