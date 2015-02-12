@@ -27,7 +27,7 @@ if ENV["NUM_INSTANCES"].to_i > 0 && ENV["NUM_INSTANCES"]
 elsif ENV["DEIS_NUM_INSTANCES"].to_i > 0 && ENV["DEIS_NUM_INSTANCES"]
   $num_instances = ENV["DEIS_NUM_INSTANCES"].to_i
 else
-  $num_instances = 4
+  $num_instances = 3
 end
 
 if File.exist?(CONFIG)
@@ -66,21 +66,25 @@ Vagrant.configure("2") do |config|
       config.vm.hostname = vm_name
 
         # Install Docker
-      docker_cmd = "wget http://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.5.0/lxc-docker-1.5.0_1.5.0_amd64.deb ;" \
+      docker0_cmd = "wget http://get.docker.io/ubuntu/pool/main/l/lxc-docker-1.5.0/lxc-docker-1.5.0_1.5.0_amd64.deb ;" \
         "dpkg -i lxc-docker-1.5.0_1.5.0_amd64.deb ;"
           # Add vagrant user to the docker group
-      docker_cmd << "usermod -a -G docker vagrant; "
-      config.vm.provision :shell, :inline => docker_cmd
+      docker0_cmd << "usermod -a -G docker vagrant; "
+      config.vm.provision :shell, :inline => docker0_cmd
 
-      # Install Docker
-      swarm_cmd = "wget https://github.com/docker/swarm/releases/download/v0.1.0-rc2/docker-swarm_linux-amd64 ;" \
-        "mv docker-swarm_linux-amd64 /bin/swarm ;"
-        # Add vagrant user to the docker group
-      swarm_cmd << "usermod -a -G docker vagrant; "
-      config.vm.provision :shell, :inline => swarm_cmd
+      #change docker engine to run on port 2375
+      docker1_cmd = " sed -e 's,#DOCKER_OPTS=\"--dns 8.8.8.8 --dns 8.8.4.4\",DOCKER_OPTS=\"-H tcp://0.0.0.0:2375 -H unix:///var/run/docker.sock\",' /etc/default/docker > /tmp/tempfile ;"\
+        "mv /tmp/tempfile /etc/default/docker ;" \
+        "service docker restart ;"
+      docker1_cmd << "usermod -a -G docker vagrant; "
+      config.vm.provision :shell, :inline => docker1_cmd
 
+      config.vm.provision :file, :source => "Dockerfile", :destination => "/home/vagrant/Dockerfile"
 
-
+      #build myswarm image frmo dockerfile"
+      docker2_cmd = "docker build -t swarm . ;"
+      docker2_cmd << "usermod -a -G docker vagrant; "
+      config.vm.provision :shell, :inline => docker2_cmd
 
       if $expose_docker_tcp
         config.vm.network "forwarded_port", guest: 2375, host: ($expose_docker_tcp + i - 1), auto_correct: true
